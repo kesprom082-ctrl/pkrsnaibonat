@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSUD Naibonat - Promosi Kesehatan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#14b8a6',600:'#0d9488',700:'#0f766e',800:'#115e59',900:'#134e4a' },
+                    accent: { 50:'#fffbeb',100:'#fef3c7',200:'#fde68a',300:'#fcd34d',400:'#fbbf24',500:'#f59e0b',600:'#d97706',700:'#b45309',800:'#92400e',900:'#78350f' }
+                },
+                fontFamily: { sans:['Plus Jakarta Sans','sans-serif'], display:['Playfair Display','serif'] }
+            }
+        }
+    };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; }
+        .hero-bg { background:linear-gradient(135deg,rgba(15,118,110,0.92),rgba(19,78,74,0.88)),url('https://picsum.photos/seed/hospital-building/1600/900.jpg'); background-size:cover; background-position:center; }
+        .glass { background:rgba(255,255,255,0.1); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.2); }
+        .card-hover { transition:all 0.3s ease; }
+        .card-hover:hover { transform:translateY(-6px); box-shadow:0 20px 40px rgba(0,0,0,0.12); }
+        .fade-in { animation:fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse-glow { 0%,100%{box-shadow:0 0 0 0 rgba(13,148,136,0.4)} 50%{box-shadow:0 0 0 12px rgba(13,148,136,0)} }
+        .pulse-glow { animation:pulse-glow 2s infinite; }
+        .toast-enter { animation:toastIn 0.4s ease-out; }
+        @keyframes toastIn { from{opacity:0;transform:translateX(100px)} to{opacity:1;transform:translateX(0)} }
+        .lightbox-overlay { animation:lbIn 0.3s ease; }
+        @keyframes lbIn { from{opacity:0} to{opacity:1} }
+        input[type="file"] { cursor:pointer; }
+        .admin-sidebar-item { transition:all 0.2s; }
+        .admin-sidebar-item:hover, .admin-sidebar-item.active { background:rgba(13,148,136,0.15); color:#0d9488; }
+        ::-webkit-scrollbar { width:8px; }
+        ::-webkit-scrollbar-track { background:#f1f5f9; }
+        ::-webkit-scrollbar-thumb { background:#94a3b8; border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:#64748b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+    const { useState, useEffect, useRef, createContext, useContext, useCallback } = React;
+
+    // ============================
+    // DEFAULT DATA
+    // ============================
+    const DEFAULT_DATA = {
+        hero: {
+            title: "RSUD Naibonat",
+            subtitle: "Unit Promosi Kesehatan",
+            description: "Melayani dengan hati, menyembuhkan dengan ilmu, menyehatkan dengan kasih. Kami berkomitmen meningkatkan kualitas hidup masyarakat melalui program promosi kesehatan yang inovatif dan berkelanjutan.",
+            image: "https://picsum.photos/seed/rsud-hero-main/1600/900.jpg",
+            stats: [
+                { icon:"fa-user-doctor", value:"25+", label:"Dokter Profesional" },
+                { icon:"fa-hospital", value:"10+", label:"Tahun Melayani" },
+                { icon:"fa-people-group", value:"5000+", label:"Pasien/Bulan" },
+                { icon:"fa-heart-pulse", value:"15+", label:"Program Promkes" }
+            ]
+        },
+        about: {
+            title: "Tentang Promkes RSUD Naibonat",
+            content: "Unit Promosi Kesehatan (Promkes) RSUD Naibonat merupakan unit yang bertanggung jawab dalam menyelenggarakan kegiatan promosi kesehatan kepada masyarakat. Kami berkomitmen untuk meningkatkan pengetahuan dan kesadaran masyarakat tentang pentingnya pola hidup sehat melalui berbagai program dan kegiatan yang inovatif.",
+            visi: "Menjadi unit promosi kesehatan rumah sakit yang unggul, inovatif, dan menjadi rujukan dalam peningkatan derajat kesehatan masyarakat di Kabupaten Kupang.",
+            misi: [
+                "Menyelenggarakan program promosi kesehatan yang berkualitas dan berbasis bukti",
+                "Meningkatkan kapasitas sumber daya manusia di bidang promosi kesehatan",
+                "Membangun kemitraan dengan masyarakat dan lintas sektor",
+                "Mengembangkan media dan metode promosi kesehatan yang inovatif",
+                "Meningkatkan pelayanan informasi kesehatan yang aksesibel"
+            ],
+            image: "https://picsum.photos/seed/promkes-team/800/600.jpg"
+        },
+        doctors: [
+            { id:1, name:"drg. Maria Katarina", specialty:"Dokter Gigi", schedule:"Senin - Jumat", time:"08:00 - 14:00", photo:"https://picsum.photos/seed/doc1/300/300.jpg", room:"Ruang Gigi" },
+            { id:2, name:"Dr. Yohanes Bere", specialty:"Dokter Umum", schedule:"Senin - Sabtu", time:"08:00 - 16:00", photo:"https://picsum.photos/seed/doc2/300/300.jpg", room:"Poli Umum" },
+            { id:3, name:"Dr. Agustina Naha", specialty:"Dokter Anak", schedule:"Selasa & Kamis", time:"09:00 - 15:00", photo:"https://picsum.photos/seed/doc3/300/300.jpg", room:"Poli Anak" },
+            { id:4, name:"Dr. Dominikus Puto", specialty:"Dokter Penyakit Dalam", schedule:"Senin & Rabu", time:"08:00 - 14:00", photo:"https://picsum.photos/seed/doc4/300/300.jpg", room:"Poli Penyakit Dalam" },
+            { id:5, name:"Dr. Yuliana Moi", specialty:"Dokter Kandungan", schedule:"Rabu & Jumat", time:"09:00 - 15:00", photo:"https://picsum.photos/seed/doc5/300/300.jpg", room:"Poli Kandungan" },
+            { id:6, name:"Dr. Fransiskus Loe", specialty:"Dokter Bedah", schedule:"Selasa & Sabtu", time:"08:00 - 14:00", photo:"https://picsum.photos/seed/doc6/300/300.jpg", room:"Poli Bedah" }
+        ],
+        gallery: [
+            { id:1, title:"Penyuluhan Kesehatan di Sekolah", image:"https://picsum.photos/seed/promkes1/800/600.jpg", date:"2024-12-15", description:"Kegiatan penyuluhan kesehatan tentang gizi seimbang di SD Inpres Naibonat" },
+            { id:2, title:"Posyandu Bulanan", image:"https://picsum.photos/seed/promkes2/800/600.jpg", date:"2024-12-10", description:"Kegiatan posyandu bulanan untuk ibu dan anak di wilayah kerja RSUD Naibonat" },
+            { id:3, title:"Donor Darah Bersama PMI", image:"https://picsum.photos/seed/promkes3/800/600.jpg", date:"2024-11-28", description:"Kegiatan donor darah bekerja sama dengan Palang Merah Indonesia" },
+            { id:4, title:"Senam Pagi Bersama Masyarakat", image:"https://picsum.photos/seed/promkes4/800/600.jpg", date:"2024-11-20", description:"Kegiatan senam pagi rutin setiap hari Minggu bersama masyarakat" },
+            { id:5, title:"Workshop PHBS", image:"https://picsum.photos/seed/promkes5/800/600.jpg", date:"2024-11-15", description:"Workshop Perilaku Hidup Bersih dan Sehat untuk kader kesehatan" },
+            { id:6, title:"Pemeriksaan Gratis", image:"https://picsum.photos/seed/promkes6/800/600.jpg", date:"2024-11-05", description:"Kegiatan pemeriksaan kesehatan gratis dalam rangka Hari Kesehatan Nasional" }
+        ],
+        complaints: [],
+        surveys: [],
+        contact: {
+            address: "Jl. El Tari, Naibonat, Kec. Kupang Timur, Kabupaten Kupang, NTT 85231",
+            phone: "(0380) 881234",
+            email: "promkes@rsudnaibonat.go.id",
+            hours: "Senin - Sabtu: 08:00 - 16:00 WITA",
+            facebook: "RSUD Naibonat",
+            instagram: "@rsudnaibonat",
+            youtube: "RSUD Naibonat Official"
+        },
+        programs: [
+            { id:1, title:"PHBS", desc:"Perilaku Hidup Bersih dan Sehat", icon:"fa-hand-sparkles", color:"bg-emerald-500" },
+            { id:2, title:"Gizi Seimbang", desc:"Edukasi nutrisi untuk masyarakat", icon:"fa-apple-whole", color:"bg-orange-500" },
+            { id:3, title:"Imunisasi", desc:"Program imunisasi lengkap", icon:"fa-syringe", color:"bg-blue-500" },
+            { id:4, title:"Kesehatan Ibu", desc:"Pemantauan kesehatan ibu hamil", icon:"fa-baby", color:"bg-pink-500" },
+            { id:5, title:"Kesehatan Jiwa", desc:"Dukungan kesehatan mental", icon:"fa-brain", color:"bg-purple-500" },
+            { id:6, title:"Sanitasi", desc:"Program sanitasi lingkungan", icon:"fa-droplet", color:"bg-cyan-500" }
+        ]
+    };
+
+    // ============================
+    // DATA MANAGEMENT
+    // ============================
+    const loadData = () => {
+        try {
+            const saved = localStorage.getItem('rsudNaibonatData');
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    };
+
+    const saveData = (data) => {
+        try { localStorage.setItem('rsudNaibonatData', JSON.stringify(data)); } catch(e) {}
+    };
+
+    const AppContext = createContext();
+    const useApp = () => useContext(AppContext);
+
+    // ============================
+    // TOAST COMPONENT
+    // ============================
+    function Toast({ toasts, removeToast }) {
+        return (
+            <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2">
+                {toasts.map(t => (
+                    <div key={t.id} className={`toast-enter flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium ${t.type==='success'?'bg-emerald-600':t.type==='error'?'bg-red-600':'bg-blue-600'}`}>
+                        <i className={`fas ${t.type==='success'?'fa-check-circle':t.type==='error'?'fa-exclamation-circle':'fa-info-circle'}`}></i>
+                        <span>{t.message}</span>
+                        <button onClick={()=>removeToast(t.id)} className="ml-2 hover:opacity-70"><i className="fas fa-times"></i></button>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    // ============================
+    // NAVBAR
+    // ============================
+    function Navbar({ page, setPage }) {
+        const [open, setOpen] = useState(false);
+        const menuItems = [
+            { key:'home', label:'Beranda', icon:'fa-home' },
+            { key:'about', label:'Tentang Kami', icon:'fa-info-circle' },
+            { key:'doctors', label:'Jadwal Dokter', icon:'fa-calendar-check' },
+            { key:'gallery', label:'Galeri Kegiatan', icon:'fa-images' },
+            { key:'complaint', label:'Pengaduan', icon:'fa-comment-dots' },
+            { key:'survey', label:'Survey', icon:'fa-star' },
+            { key:'contact', label:'Kontak', icon:'fa-phone' }
+        ];
+        return (
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="flex items-center justify-between h-16">
+                        <button onClick={()=>setPage('home')} className="flex items-center gap-3 group">
+                            <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-md">
+                                <i className="fas fa-hospital text-white text-sm"></i>
+                            </div>
+                            <div className="hidden sm:block">
+                                <div className="font-bold text-primary-800 text-sm leading-tight">RSUD Naibonat</div>
+                                <div className="text-[10px] text-primary-600 font-medium tracking-wide">PROMOSI KESEHATAN</div>
+                            </div>
+                        </button>
+                        <div className="hidden lg:flex items-center gap-1">
+                            {menuItems.map(m => (
+                                <button key={m.key} onClick={()=>setPage(m.key)}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${page===m.key?'bg-primary-50 text-primary-700':'text-slate-600 hover:bg-slate-50 hover:text-primary-600'}`}>
+                                    {m.label}
+                                </button>
+                            ))}
+                            <button onClick={()=>setPage('login')}
+                                className="ml-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-all shadow-sm">
+                                <i className="fas fa-lock mr-1"></i> Admin
+                            </button>
+                        </div>
+                        <button onClick={()=>setOpen(!open)} className="lg:hidden p-2 rounded-lg hover:bg-slate-100">
+                            <i className={`fas ${open?'fa-times':'fa-bars'} text-slate-600 text-lg`}></i>
+                        </button>
+                    </div>
+                </div>
+                {open && (
+                    <div className="lg:hidden bg-white border-t border-slate-100 shadow-lg fade-in">
+                        <div className="px-4 py-3 space-y-1">
+                            {menuItems.map(m => (
+                                <button key={m.key} onClick={()=>{setPage(m.key);setOpen(false)}}
+                                    className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${page===m.key?'bg-primary-50 text-primary-700':'text-slate-600 hover:bg-slate-50'}`}>
+                                    <i className={`fas ${m.icon} mr-3 w-5 text-center`}></i>{m.label}
+                                </button>
+                            ))}
+                            <button onClick={()=>{setPage('login');setOpen(false)}}
+                                className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 transition-all">
+                                <i className="fas fa-lock mr-3 w-5 text-center"></i>Panel Admin
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </nav>
+        );
+    }
+
+    // ============================
+    // FOOTER
+    // ============================
+    function Footer({ data, setPage }) {
+        return (
+            <footer className="bg-primary-900 text-primary-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div className="md:col-span-2">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                                    <i className="fas fa-hospital text-primary-300"></i>
+                                </div>
+                                <div>
+                                    <div className="font-bold text-white">RSUD Naibonat</div>
+                                    <div className="text-xs text-primary-300">Unit Promosi Kesehatan</div>
+                                </div>
+                            </div>
+                            <p className="text-sm text-primary-200 leading-relaxed mb-4">{data.hero.description.substring(0,120)}...</p>
+                            <div className="flex gap-3">
+                                {['fa-facebook-f','fa-instagram','fa-youtube'].map((ic,i) => (
+                                    <a key={i} href="#" className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center hover:bg-white/20 transition-all text-sm"><i className={`fab ${ic}`}></i></a>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white mb-4 text-sm">Navigasi</h4>
+                            <div className="space-y-2">
+                                {[{k:'home',l:'Beranda'},{k:'about',l:'Tentang Kami'},{k:'doctors',l:'Jadwal Dokter'},{k:'gallery',l:'Galeri'},{k:'complaint',l:'Pengaduan'},{k:'survey',l:'Survey'},{k:'contact',l:'Kontak'}].map(n => (
+                                    <button key={n.k} onClick={()=>setPage(n.k)} className="block text-sm text-primary-200 hover:text-white transition-colors">{n.l}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white mb-4 text-sm">Kontak</h4>
+                            <div className="space-y-3 text-sm text-primary-200">
+                                <div className="flex gap-2"><i className="fas fa-map-marker-alt mt-1 text-primary-400"></i><span>{data.contact.address}</span></div>
+                                <div className="flex gap-2"><i className="fas fa-phone text-primary-400"></i><span>{data.contact.phone}</span></div>
+                                <div className="flex gap-2"><i className="fas fa-envelope text-primary-400"></i><span>{data.contact.email}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="border-t border-primary-800">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-primary-400">
+                        &copy; {new Date().getFullYear()} RSUD Naibonat - Unit Promosi Kesehatan. Hak Cipta Dilindungi.
+                    </div>
+                </div>
+            </footer>
+        );
+    }
+
+    // ============================
+    // HOME PAGE
+    // ============================
+    function HomePage({ data, setPage }) {
+        return (
+            <div className="fade-in">
+                {/* Hero */}
+                <section className="hero-bg min-h-screen flex items-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-900/30 to-transparent"></div>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-32 relative z-10">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
+                                    <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse"></span>
+                                    <span className="text-primary-100 text-sm font-medium">Unit Promosi Kesehatan</span>
+                                </div>
+                                <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight">{data.hero.title}</h1>
+                                <p className="text-xl text-primary-200 font-light mb-4">{data.hero.subtitle}</p>
+                                <p className="text-primary-100/80 mb-8 leading-relaxed max-w-lg">{data.hero.description}</p>
+                                <div className="flex flex-wrap gap-4">
+                                    <button onClick={()=>setPage('doctors')} className="px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl">
+                                        <i className="fas fa-calendar-check mr-2"></i>Jadwal Dokter
+                                    </button>
+                                    <button onClick={()=>setPage('about')} className="px-6 py-3 glass text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+                                        <i className="fas fa-info-circle mr-2"></i>Tentang Kami
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="hidden lg:block">
+                                <div className="relative">
+                                    <div className="absolute -inset-4 bg-accent-500/20 rounded-3xl blur-3xl"></div>
+                                    <img src={data.hero.image} alt="RSUD Naibonat" className="relative rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]" onError={e=>e.target.src='https://picsum.photos/seed/fallback-hero/800/600.jpg'}/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0">
+                        <svg viewBox="0 0 1440 120" fill="none"><path d="M0,120 L0,60 Q360,0 720,60 Q1080,120 1440,60 L1440,120 Z" fill="#f8fafc"/></svg>
+                    </div>
+                </section>
+
+                {/* Stats */}
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {data.hero.stats.map((s,i) => (
+                                <div key={i} className="bg-white rounded-2xl p-6 text-center shadow-sm border border-slate-100 card-hover">
+                                    <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <i className={`fas ${s.icon} text-primary-600 text-xl`}></i>
+                                    </div>
+                                    <div className="text-3xl font-bold text-primary-700 mb-1">{s.value}</div>
+                                    <div className="text-sm text-slate-500">{s.label}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Programs */}
+                <section className="py-20 bg-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="text-center mb-12">
+                            <span className="text-primary-600 font-semibold text-sm tracking-wider uppercase">Program Kami</span>
+                            <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-800 mt-2">Program Promosi Kesehatan</h2>
+                            <p className="text-slate-500 mt-3 max-w-xl mx-auto">Berbagai program promosi kesehatan yang kami selenggarakan untuk masyarakat</p>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            {data.programs.map(p => (
+                                <div key={p.id} className="bg-slate-50 rounded-2xl p-5 text-center card-hover border border-slate-100">
+                                    <div className={`w-12 h-12 ${p.color} rounded-xl flex items-center justify-center mx-auto mb-3 shadow-sm`}>
+                                        <i className={`fas ${p.icon} text-white text-lg`}></i>
+                                    </div>
+                                    <h3 className="font-bold text-sm text-slate-800 mb-1">{p.title}</h3>
+                                    <p className="text-xs text-slate-500">{p.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Latest Gallery Preview */}
+                <section className="py-20 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="flex items-center justify-between mb-10">
+                            <div>
+                                <span className="text-primary-600 font-semibold text-sm tracking-wider uppercase">Galeri</span>
+                                <h2 className="font-display text-3xl font-bold text-slate-800 mt-1">Kegiatan Terbaru</h2>
+                            </div>
+                            <button onClick={()=>setPage('gallery')} className="px-5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold hover:bg-primary-700 transition-all shadow-sm">
+                                Lihat Semua <i className="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {data.gallery.slice(0,3).map(g => (
+                                <div key={g.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 card-hover">
+                                    <img src={g.image} alt={g.title} className="w-full aspect-video object-cover" onError={e=>e.target.src='https://picsum.photos/seed/fallback/800/600.jpg'}/>
+                                    <div className="p-5">
+                                        <div className="text-xs text-primary-600 font-medium mb-1"><i className="fas fa-calendar mr-1"></i>{g.date}</div>
+                                        <h3 className="font-bold text-slate-800">{g.title}</h3>
+                                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">{g.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* CTA */}
+                <section className="py-20 bg-gradient-to-br from-primary-700 to-primary-900 relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-10 left-10 w-40 h-40 border-2 border-white rounded-full"></div>
+                        <div className="absolute bottom-10 right-10 w-60 h-60 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
+                        <h2 className="font-display text-3xl sm:text-4xl font-bold text-white mb-4">Sampaikan Aspirasi Anda</h2>
+                        <p className="text-primary-100 mb-8 max-w-xl mx-auto">Kami menghargai setiap masukan dari Anda. Sampaikan pengaduan atau ikuti survey kepuasan kami untuk membantu meningkatkan pelayanan.</p>
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <button onClick={()=>setPage('complaint')} className="px-6 py-3 bg-white text-primary-700 font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-lg">
+                                <i className="fas fa-comment-dots mr-2"></i>Pengaduan Pasien
+                            </button>
+                            <button onClick={()=>setPage('survey')} className="px-6 py-3 bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-all shadow-lg">
+                                <i className="fas fa-star mr-2"></i>Survey Kepuasan
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // ABOUT PAGE
+    // ============================
+    function AboutPage({ data }) {
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Tentang Kami</h1>
+                        <p className="text-primary-200 max-w-xl mx-auto">Mengenal lebih dekat Unit Promosi Kesehatan RSUD Naibonat</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <img src={data.about.image} alt="Tim Promkes" className="rounded-2xl shadow-lg w-full object-cover aspect-[4/3]" onError={e=>e.target.src='https://picsum.photos/seed/about-fallback/800/600.jpg'}/>
+                            </div>
+                            <div>
+                                <span className="text-primary-600 font-semibold text-sm tracking-wider uppercase">Profil</span>
+                                <h2 className="font-display text-3xl font-bold text-slate-800 mt-2 mb-4">{data.about.title}</h2>
+                                <p className="text-slate-600 leading-relaxed">{data.about.content}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+                                <div className="w-14 h-14 bg-primary-50 rounded-xl flex items-center justify-center mb-4">
+                                    <i className="fas fa-eye text-primary-600 text-xl"></i>
+                                </div>
+                                <h3 className="font-bold text-xl text-slate-800 mb-3">Visi</h3>
+                                <p className="text-slate-600 leading-relaxed">{data.about.visi}</p>
+                            </div>
+                            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+                                <div className="w-14 h-14 bg-accent-50 rounded-xl flex items-center justify-center mb-4">
+                                    <i className="fas fa-bullseye text-accent-600 text-xl"></i>
+                                </div>
+                                <h3 className="font-bold text-xl text-slate-800 mb-3">Misi</h3>
+                                <ol className="space-y-2">
+                                    {data.about.misi.map((m,i) => (
+                                        <li key={i} className="flex gap-3 text-slate-600">
+                                            <span className="flex-shrink-0 w-6 h-6 bg-accent-100 text-accent-700 rounded-full flex items-center justify-center text-xs font-bold">{i+1}</span>
+                                            <span>{m}</span>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // DOCTORS PAGE
+    // ============================
+    function DoctorsPage({ data }) {
+        const [filter, setFilter] = useState('');
+        const filtered = data.doctors.filter(d =>
+            d.name.toLowerCase().includes(filter.toLowerCase()) ||
+            d.specialty.toLowerCase().includes(filter.toLowerCase())
+        );
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Jadwal Dokter</h1>
+                        <p className="text-primary-200">Informasi jadwal praktek dokter di RSUD Naibonat</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                            <div className="relative flex-1">
+                                <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" placeholder="Cari dokter atau spesialisasi..." value={filter} onChange={e=>setFilter(e.target.value)}
+                                    className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"/>
+                            </div>
+                        </div>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filtered.map(d => (
+                                <div key={d.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 card-hover">
+                                    <div className="bg-gradient-to-br from-primary-50 to-primary-100 p-6 text-center">
+                                        <img src={d.photo} alt={d.name} className="w-20 h-20 rounded-full object-cover mx-auto border-4 border-white shadow-md" onError={e=>e.target.src='https://picsum.photos/seed/doc-fb/200/200.jpg'}/>
+                                    </div>
+                                    <div className="p-5 text-center">
+                                        <h3 className="font-bold text-slate-800 mb-1">{d.name}</h3>
+                                        <div className="inline-flex items-center gap-1 bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-xs font-medium mb-3">
+                                            <i className="fas fa-stethoscope"></i>{d.specialty}
+                                        </div>
+                                        <div className="space-y-2 text-sm text-slate-600">
+                                            <div className="flex items-center justify-center gap-2"><i className="fas fa-calendar text-primary-500 w-5"></i>{d.schedule}</div>
+                                            <div className="flex items-center justify-center gap-2"><i className="fas fa-clock text-accent-500 w-5"></i>{d.time}</div>
+                                            <div className="flex items-center justify-center gap-2"><i className="fas fa-door-open text-slate-400 w-5"></i>{d.room}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {filtered.length===0 && (
+                            <div className="text-center py-16 text-slate-400">
+                                <i className="fas fa-user-doctor text-5xl mb-4"></i>
+                                <p className="text-lg">Dokter tidak ditemukan</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // GALLERY PAGE
+    // ============================
+    function GalleryPage({ data }) {
+        const [lightbox, setLightbox] = useState(null);
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Galeri Kegiatan</h1>
+                        <p className="text-primary-200">Dokumentasi kegiatan promosi kesehatan RSUD Naibonat</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {data.gallery.map(g => (
+                                <div key={g.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 card-hover group cursor-pointer" onClick={()=>setLightbox(g)}>
+                                    <div className="relative overflow-hidden">
+                                        <img src={g.image} alt={g.title} className="w-full aspect-video object-cover group-hover:scale-110 transition-transform duration-500" onError={e=>e.target.src='https://picsum.photos/seed/gal-fb/800/600.jpg'}/>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                            <span className="text-white text-sm font-medium"><i className="fas fa-expand mr-1"></i>Lihat Detail</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5">
+                                        <div className="text-xs text-primary-600 font-medium mb-1"><i className="fas fa-calendar mr-1"></i>{g.date}</div>
+                                        <h3 className="font-bold text-slate-800">{g.title}</h3>
+                                        <p className="text-sm text-slate-500 mt-1 line-clamp-2">{g.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {data.gallery.length===0 && (
+                            <div className="text-center py-16 text-slate-400">
+                                <i className="fas fa-images text-5xl mb-4"></i>
+                                <p className="text-lg">Belum ada galeri</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+                {lightbox && (
+                    <div className="lightbox-overlay fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={()=>setLightbox(null)}>
+                        <div className="relative max-w-4xl w-full" onClick={e=>e.stopPropagation()}>
+                            <button onClick={()=>setLightbox(null)} className="absolute -top-12 right-0 text-white text-2xl hover:text-slate-300"><i className="fas fa-times"></i></button>
+                            <img src={lightbox.image} alt={lightbox.title} className="w-full rounded-2xl max-h-[70vh] object-contain mx-auto" onError={e=>e.target.src='https://picsum.photos/seed/lb-fb/1200/800.jpg'}/>
+                            <div className="mt-4 text-center">
+                                <h3 className="text-white font-bold text-xl">{lightbox.title}</h3>
+                                <p className="text-slate-300 mt-1">{lightbox.description}</p>
+                                <p className="text-primary-300 text-sm mt-2">{lightbox.date}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // ============================
+    // COMPLAINT PAGE
+    // ============================
+    function ComplaintPage({ addComplaint, addToast }) {
+        const [form, setForm] = useState({ name:'', email:'', phone:'', type:'', message:'' });
+        const [submitted, setSubmitted] = useState(false);
+        const types = ['Pelayanan Dokter','Pelayanan Perawat','Fasilitas Rumah Sakit','Obat & Farmasi','Administrasi','Kebersihan','Lainnya'];
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            if (!form.name || !form.email || !form.type || !form.message) { addToast('Harap isi semua kolom wajib','error'); return; }
+            addComplaint({ ...form, id: Date.now(), date: new Date().toISOString(), status:'Baru' });
+            setSubmitted(true);
+            addToast('Pengaduan berhasil dikirim','success');
+        };
+        if (submitted) return (
+            <div className="fade-in pt-20 min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="bg-white rounded-2xl p-10 shadow-sm border border-slate-100 text-center max-w-md mx-4">
+                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fas fa-check text-emerald-500 text-2xl"></i></div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Pengaduan Terkirim</h2>
+                    <p className="text-slate-500 mb-6">Terima kasih atas pengaduan Anda. Kami akan segera menindaklanjuti.</p>
+                    <button onClick={()=>{setSubmitted(false);setForm({name:'',email:'',phone:'',type:'',message:''})}} className="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all">Kirim Pengaduan Lain</button>
+                </div>
+            </div>
+        );
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Pengaduan Pasien</h1>
+                        <p className="text-primary-200">Sampaikan keluhan atau saran Anda untuk pelayanan yang lebih baik</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-2xl mx-auto px-4 sm:px-6">
+                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 space-y-5">
+                            <div className="grid sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap *</label>
+                                    <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="Masukkan nama"/>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email *</label>
+                                    <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="email@contoh.com"/>
+                                </div>
+                            </div>
+                            <div className="grid sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">No. Telepon</label>
+                                    <input type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="08xxxxxxxxxx"/>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Jenis Pengaduan *</label>
+                                    <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm">
+                                        <option value="">Pilih jenis pengaduan</option>
+                                        {types.map(t=><option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Isi Pengaduan *</label>
+                                <textarea value={form.message} onChange={e=>setForm({...form,message:e.target.value})} rows={5} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" placeholder="Tuliskan pengaduan Anda secara detail..."></textarea>
+                            </div>
+                            <button type="submit" className="w-full py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm">
+                                <i className="fas fa-paper-plane mr-2"></i>Kirim Pengaduan
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // SURVEY PAGE
+    // ============================
+    function SurveyPage({ addSurvey, addToast }) {
+        const [form, setForm] = useState({ name:'', visit:'', cleanliness:0, service:0, doctor:0, facility:0, overall:0, suggestion:'' });
+        const [submitted, setSubmitted] = useState(false);
+        const labels = ['Sangat Tidak Puas','Tidak Puas','Cukup','Puas','Sangat Puas'];
+        const Rating = ({ value, onChange, label }) => (
+            <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">{label}</label>
+                <div className="flex gap-2">
+                    {[1,2,3,4,5].map(v => (
+                        <button key={v} type="button" onClick={()=>onChange(v)}
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${value>=v?'bg-accent-400 text-white shadow-sm':'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                            {v}
+                        </button>
+                    ))}
+                </div>
+                {value>0 && <p className="text-xs text-slate-500 mt-1">{labels[value-1]}</p>}
+            </div>
+        );
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            if (!form.name || !form.visit || !form.cleanliness || !form.service || !form.overall) { addToast('Harap isi semua penilaian wajib','error'); return; }
+            addSurvey({ ...form, id: Date.now(), date: new Date().toISOString() });
+            setSubmitted(true);
+            addToast('Survey berhasil dikirim, terima kasih!','success');
+        };
+        if (submitted) return (
+            <div className="fade-in pt-20 min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="bg-white rounded-2xl p-10 shadow-sm border border-slate-100 text-center max-w-md mx-4">
+                    <div className="w-16 h-16 bg-accent-50 rounded-full flex items-center justify-center mx-auto mb-4"><i className="fas fa-star text-accent-500 text-2xl"></i></div>
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">Terima Kasih!</h2>
+                    <p className="text-slate-500 mb-6">Survey kepuasan Anda telah terkirim. Masukan Anda sangat berarti bagi kami.</p>
+                    <button onClick={()=>{setSubmitted(false);setForm({name:'',visit:'',cleanliness:0,service:0,doctor:0,facility:0,overall:0,suggestion:''})}} className="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all">Isi Survey Lagi</button>
+                </div>
+            </div>
+        );
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Survey Kepuasan Pasien</h1>
+                        <p className="text-primary-200">Bantu kami meningkatkan kualitas pelayanan</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-2xl mx-auto px-4 sm:px-6">
+                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 space-y-6">
+                            <div className="grid sm:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nama *</label>
+                                    <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="Nama Anda"/>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Tanggal Kunjungan *</label>
+                                    <input type="date" value={form.visit} onChange={e=>setForm({...form,visit:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/>
+                                </div>
+                            </div>
+                            <Rating label="Kebersihan Fasilitas *" value={form.cleanliness} onChange={v=>setForm({...form,cleanliness:v})}/>
+                            <Rating label="Keramahan Petugas *" value={form.service} onChange={v=>setForm({...form,service:v})}/>
+                            <Rating label="Kualitas Dokter *" value={form.doctor} onChange={v=>setForm({...form,doctor:v})}/>
+                            <Rating label="Fasilitas Rumah Sakit *" value={form.facility} onChange={v=>setForm({...form,facility:v})}/>
+                            <Rating label="Kepuasan Keseluruhan *" value={form.overall} onChange={v=>setForm({...form,overall:v})}/>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Saran & Masukan</label>
+                                <textarea value={form.suggestion} onChange={e=>setForm({...form,suggestion:e.target.value})} rows={4} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none" placeholder="Tuliskan saran Anda..."></textarea>
+                            </div>
+                            <button type="submit" className="w-full py-3 bg-accent-500 text-white font-semibold rounded-xl hover:bg-accent-600 transition-all shadow-sm">
+                                <i className="fas fa-paper-plane mr-2"></i>Kirim Survey
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // CONTACT PAGE
+    // ============================
+    function ContactPage({ data, addToast }) {
+        const [form, setForm] = useState({ name:'', email:'', subject:'', message:'' });
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            addToast('Pesan berhasil dikirim!','success');
+            setForm({name:'',email:'',subject:'',message:''});
+        };
+        return (
+            <div className="fade-in pt-20">
+                <section className="py-16 bg-gradient-to-br from-primary-800 to-primary-950">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold text-white mb-3">Hubungi Kami</h1>
+                        <p className="text-primary-200">Kami siap membantu Anda</p>
+                    </div>
+                </section>
+                <section className="py-16 bg-slate-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                        <div className="grid lg:grid-cols-3 gap-6 mb-10">
+                            {[
+                                { icon:'fa-map-marker-alt', color:'bg-emerald-500', title:'Alamat', text:data.contact.address },
+                                { icon:'fa-phone', color:'bg-blue-500', title:'Telepon', text:data.contact.phone },
+                                { icon:'fa-clock', color:'bg-accent-500', title:'Jam Operasional', text:data.contact.hours }
+                            ].map((c,i) => (
+                                <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center card-hover">
+                                    <div className={`w-12 h-12 ${c.color} rounded-xl flex items-center justify-center mx-auto mb-3`}>
+                                        <i className={`fas ${c.icon} text-white`}></i>
+                                    </div>
+                                    <h3 className="font-bold text-slate-800 mb-2">{c.title}</h3>
+                                    <p className="text-sm text-slate-500">{c.text}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="grid lg:grid-cols-2 gap-8">
+                            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+                                <h2 className="font-bold text-xl text-slate-800 mb-5">Kirim Pesan</h2>
+                                <form onSubmit={handleSubmit} className="space-y-4">
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Nama" required className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/>
+                                        <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="Email" required className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/>
+                                    </div>
+                                    <input type="text" value={form.subject} onChange={e=>setForm({...form,subject:e.target.value})} placeholder="Subjek" required className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/>
+                                    <textarea value={form.message} onChange={e=>setForm({...form,message:e.target.value})} rows={5} placeholder="Pesan Anda" required className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"></textarea>
+                                    <button type="submit" className="w-full py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all"><i className="fas fa-paper-plane mr-2"></i>Kirim</button>
+                                </form>
+                            </div>
+                            <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31551.96!2d123.6!3d-10.17!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1c569f7e8a8e8a8%3A0x8a8a8a8a8a8a8a8a!2sNaibonat!5e0!3m2!1sid!2sid!4v1" width="100%" height="100%" style={{minHeight:'400px',border:0}} allowFullScreen="" loading="lazy"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    // ============================
+    // LOGIN PAGE
+    // ============================
+    function LoginPage({ onLogin, setPage, addToast }) {
+        const [user, setUser] = useState('');
+        const [pass, setPass] = useState('');
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            if (user === 'pkrs' && pass === 'pkrs1707') {
+                onLogin();
+                addToast('Login berhasil! Selamat datang Admin','success');
+            } else {
+                addToast('Username atau password salah','error');
+            }
+        };
+        return (
+            <div className="fade-in pt-20 min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-800 to-primary-950">
+                <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4">
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <i className="fas fa-shield-halved text-primary-600 text-2xl"></i>
+                        </div>
+                        <h2 className="font-bold text-2xl text-slate-800">Panel Admin</h2>
+                        <p className="text-slate-500 text-sm mt-1">Masuk untuk mengelola konten website</p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Username</label>
+                            <div className="relative">
+                                <i className="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" value={user} onChange={e=>setUser(e.target.value)} className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="Username" required/>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
+                            <div className="relative">
+                                <i className="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="password" value={pass} onChange={e=>setPass(e.target.value)} className="w-full pl-11 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm" placeholder="Password" required/>
+                            </div>
+                        </div>
+                        <button type="submit" className="w-full py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm">
+                            <i className="fas fa-sign-in-alt mr-2"></i>Masuk
+                        </button>
+                    </form>
+                    <button onClick={()=>setPage('home')} className="w-full mt-4 py-2.5 text-slate-500 text-sm hover:text-primary-600 transition-colors">
+                        <i className="fas fa-arrow-left mr-1"></i>Kembali ke Beranda
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // ============================
+    // IMAGE UPLOADER COMPONENT
+    // ============================
+    function ImageUploader({ value, onChange, label }) {
+        const fileRef = useRef();
+        const handleFile = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2*1024*1024) { alert('Ukuran file maksimal 2MB'); return; }
+            const reader = new FileReader();
+            reader.onload = (ev) => onChange(ev.target.result);
+            reader.readAsDataURL(file);
+        };
+        return (
+            <div>
+                {label && <label className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</label>}
+                <div className="flex gap-2 mb-2">
+                    <input type="text" value={value||''} onChange={e=>onChange(e.target.value)} placeholder="URL gambar atau upload file" className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/>
+                    <button type="button" onClick={()=>fileRef.current.click()} className="px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-200 transition-all">
+                        <i className="fas fa-upload mr-1"></i>Upload
+                    </button>
+                    <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden"/>
+                </div>
+                {value && <img src={value} alt="Preview" className="w-32 h-24 object-cover rounded-lg border border-slate-200" onError={e=>e.target.style.display='none'}/>}
+            </div>
+        );
+    }
+
+    // ============================
+    // ADMIN PANEL
+    // ============================
+    function AdminPanel({ data, updateData, onLogout, setPage, addToast }) {
+        const [tab, setTab] = useState('dashboard');
+        const [editData, setEditData] = useState(JSON.parse(JSON.stringify(data)));
+
+        useEffect(() => { setEditData(JSON.parse(JSON.stringify(data))); }, [data]);
+
+        const save = (newData) => {
+            updateData(newData);
+            addToast('Data berhasil disimpan!','success');
+        };
+
+        const tabs = [
+            { key:'dashboard', label:'Dashboard', icon:'fa-gauge-high' },
+            { key:'hero', label:'Beranda', icon:'fa-home' },
+            { key:'about', label:'Tentang Kami', icon:'fa-info-circle' },
+            { key:'doctors', label:'Jadwal Dokter', icon:'fa-user-doctor' },
+            { key:'gallery', label:'Galeri', icon:'fa-images' },
+            { key:'programs', label:'Program', icon:'fa-heart-pulse' },
+            { key:'complaints', label:'Pengaduan', icon:'fa-comment-dots' },
+            { key:'surveys', label:'Survey', icon:'fa-star' },
+            { key:'contact', label:'Kontak', icon:'fa-phone' },
+        ];
+
+        // ---------- Dashboard ----------
+        const Dashboard = () => (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-slate-800">Dashboard</h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                        { icon:'fa-user-doctor', label:'Dokter', value:data.doctors.length, color:'bg-emerald-500' },
+                        { icon:'fa-images', label:'Galeri', value:data.gallery.length, color:'bg-blue-500' },
+                        { icon:'fa-comment-dots', label:'Pengaduan', value:data.complaints.length, color:'bg-orange-500' },
+                        { icon:'fa-star', label:'Survey', value:data.surveys.length, color:'bg-purple-500' }
+                    ].map((s,i) => (
+                        <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                            <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center mb-3`}>
+                                <i className={`fas ${s.icon} text-white text-sm`}></i>
+                            </div>
+                            <div className="text-2xl font-bold text-slate-800">{s.value}</div>
+                            <div className="text-sm text-slate-500">{s.label}</div>
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 className="font-bold text-slate-800 mb-4">Pengaduan Terbaru</h3>
+                    {data.complaints.length === 0 ? <p className="text-slate-400 text-sm">Belum ada pengaduan</p> : (
+                        <div className="space-y-3">
+                            {data.complaints.slice(-5).reverse().map(c => (
+                                <div key={c.id} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0"><i className="fas fa-comment text-orange-500 text-xs"></i></div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2"><span className="font-semibold text-sm text-slate-800">{c.name}</span><span className="text-xs text-slate-400">{new Date(c.date).toLocaleDateString('id-ID')}</span></div>
+                                        <p className="text-sm text-slate-600 truncate">{c.message}</p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.status==='Baru'?'bg-red-100 text-red-700':'bg-emerald-100 text-emerald-700'}`}>{c.status}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 className="font-bold text-slate-800 mb-4">Survey Terbaru</h3>
+                    {data.surveys.length === 0 ? <p className="text-slate-400 text-sm">Belum ada survey</p> : (
+                        <div className="space-y-3">
+                            {data.surveys.slice(-5).reverse().map(s => (
+                                <div key={s.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0"><i className="fas fa-star text-purple-500 text-xs"></i></div>
+                                    <div className="flex-1"><span className="font-semibold text-sm text-slate-800">{s.name}</span><div className="flex gap-1 mt-0.5">{[1,2,3,4,5].map(v=><i key={v} className={`fas fa-star text-xs ${v<=s.overall?'text-amber-400':'text-slate-300'}`}></i>)}</div></div>
+                                    <span className="text-xs text-slate-400">{new Date(s.date).toLocaleDateString('id-ID')}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+
+        // ---------- Hero Editor ----------
+        const HeroEditor = () => {
+            const [h, setH] = useState({...editData.hero});
+            return (
+                <div className="space-y-5">
+                    <div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-800">Edit Beranda</h2></div>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Judul</label><input type="text" value={h.title} onChange={e=>setH({...h,title:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/></div>
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Sub Judul</label><input type="text" value={h.subtitle} onChange={e=>setH({...h,subtitle:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/></div>
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Deskripsi</label><textarea value={h.description} onChange={e=>setH({...h,description:e.target.value})} rows={3} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"></textarea></div>
+                        <ImageUploader label="Gambar Hero" value={h.image} onChange={v=>setH({...h,image:v})}/>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Statistik</label>
+                            {h.stats.map((s,i)=>(
+                                <div key={i} className="grid grid-cols-3 gap-2 mb-2">
+                                    <input type="text" value={s.icon} onChange={e=>{const ns=[...h.stats];ns[i]={...ns[i],icon:e.target.value};setH({...h,stats:ns})}} placeholder="Icon (fa-xxx)" className="px-3 py-2 border border-slate-200 rounded-lg text-sm"/>
+                                    <input type="text" value={s.value} onChange={e=>{const ns=[...h.stats];ns[i]={...ns[i],value:e.target.value};setH({...h,stats:ns})}} placeholder="Nilai" className="px-3 py-2 border border-slate-200 rounded-lg text-sm"/>
+                                    <input type="text" value={s.label} onChange={e=>{const ns=[...h.stats];ns[i]={...ns[i],label:e.target.value};setH({...h,stats:ns})}} placeholder="Label" className="px-3 py-2 border border-slate-200 rounded-lg text-sm"/>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={()=>{const nd={...editData,hero:h};save(nd);}} className="px-6 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all"><i className="fas fa-save mr-2"></i>Simpan</button>
+                    </div>
+                </div>
+            );
+        };
+
+        // ---------- About Editor ----------
+        const AboutEditor = () => {
+            const [a, setA] = useState({...editData.about, misi:[...editData.about.misi]});
+            return (
+                <div className="space-y-5">
+                    <h2 className="text-2xl font-bold text-slate-800">Edit Tentang Kami</h2>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Judul</label><input type="text" value={a.title} onChange={e=>setA({...a,title:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"/></div>
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Konten</label><textarea value={a.content} onChange={e=>setA({...a,content:e.target.value})} rows={4} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"></textarea></div>
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Visi</label><textarea value={a.visi} onChange={e=>setA({...a,visi:e.target.value})} rows={2} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm resize-none"></textarea></div>
+                        <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-1.5">Misi</label>
+                            {a.misi.map((m,i)=>(
+                                <div key={i} className="flex gap-2 mb-2">
+                                    <input type="text" value={m} onChange={e=>{const nm=[...a.misi];nm[i]=e.target.value;setA({...a,misi:nm})}} className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm"/>
+                                    <button onClick={()=>{const nm=a.misi.filter((_,j)=>j!==i);setA({...a,misi:nm})}} className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg"><i className="fas fa-trash text-xs"></i></button>
+                                </div>
+                            ))}
+                            <button onClick={()=>setA({...a,misi:[...a.misi,'']})} className="text-primary-600 text-sm font-medium hover:text-primary-700"><i className="fas fa-plus mr-1"></i>Tambah Misi</button>
+                        </div>
+                        <ImageUploader label="Gambar" value={a.image} onChange={v=>setA({...a,image:v})}/>
+                        <button onClick={()=>save({...editData,about:a})} className="px-6 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all"><i className="fas fa-save mr-2"></i>Simpan</button>
+                    </div>
+                </div>
+            );
+        };
+
+        // ---------- Doctor Manager ----------
+        const DoctorManager = () => {
+            const [docs, setDocs] = useState([...editData.doctors]);
+            const [editing, setEditing] = useState(null);
+            const emptyDoc = { id:0, name:'', specialty:'', schedule:'', time:'', photo:'https://picsum.photos/seed/newdoc/300/300.jpg', room:'' };
+            const addNew = () => { setEditing({...emptyDoc, id:Date.now()}); };
+            const saveDoc = () => {
+                if (!editing.name || !editing.specialty) { addToast('Nama dan spesialisasi wajib diisi','error'); return; }
+                let nd;
+                if (docs.find(d=>d.id===editing.id)) { nd = docs.map(d=>d.id===editing.id?editing:d); }
+                else { nd = [...docs, editing]; }
+                setDocs(nd);
+                save({...editData,doctors:nd});
+                setEditing(null);
+            };
+            const deleteDoc = (id) => {
+                if (!confirm('Hapus dokter ini?')) return;
+                const nd = docs.filter(d=>d.id!==id);
+                setDocs(nd);
+                save({...editData,doctors:nd});
+            };
+            return (
+                <div className="space-y-5">
+                    <div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-800">Kelola Jadwal Dokter</h2><button onClick={addNew} className="px-4 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-plus mr-1"></i>Tambah Dokter</button></div>
+                    {editing && (
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-primary-200 space-y-4">
+                            <h3 className="font-bold text-lg text-primary-700">{editing.id && docs.find(d=>d.id===editing.id)?'Edit':'Tambah'} Dokter</h3>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama *</label><input type="text" value={editing.name} onChange={e=>setEditing({...editing,name:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Spesialisasi *</label><input type="text" value={editing.specialty} onChange={e=>setEditing({...editing,specialty:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Jadwal</label><input type="text" value={editing.schedule} onChange={e=>setEditing({...editing,schedule:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Senin - Jumat"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Jam</label><input type="text" value={editing.time} onChange={e=>setEditing({...editing,time:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="08:00 - 14:00"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Ruang</label><input type="text" value={editing.room} onChange={e=>setEditing({...editing,room:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Poli Umum"/></div>
+                            </div>
+                            <ImageUploader label="Foto Dokter" value={editing.photo} onChange={v=>setEditing({...editing,photo:v})}/>
+                            <div className="flex gap-2">
+                                <button onClick={saveDoc} className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-save mr-1"></i>Simpan</button>
+                                <button onClick={()=>setEditing(null)} className="px-5 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-200 transition-all">Batal</button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid gap-4">
+                        {docs.map(d => (
+                            <div key={d.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-4">
+                                <img src={d.photo} alt={d.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" onError={e=>e.target.src='https://picsum.photos/seed/docfb/100/100.jpg'}/>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-slate-800">{d.name}</h3>
+                                    <p className="text-sm text-primary-600">{d.specialty} • {d.schedule} • {d.time}</p>
+                                </div>
+                                <div className="flex gap-2 flex-shrink-0">
+                                    <button onClick={()=>setEditing({...d})} className="w-9 h-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-100"><i className="fas fa-pen text-xs"></i></button>
+                                    <button onClick={()=>deleteDoc(d.id)} className="w-9 h-9 bg-red-50 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-100"><i className="fas fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // ---------- Gallery Manager ----------
+        const GalleryManager = () => {
+            const [items, setItems] = useState([...editData.gallery]);
+            const [editing, setEditing] = useState(null);
+            const emptyItem = { id:0, title:'', image:'https://picsum.photos/seed/newgallery/800/600.jpg', date:new Date().toISOString().split('T')[0], description:'' };
+            const addNew = () => { setEditing({...emptyItem, id:Date.now()}); };
+            const saveItem = () => {
+                if (!editing.title) { addToast('Judul wajib diisi','error'); return; }
+                let ni;
+                if (items.find(g=>g.id===editing.id)) { ni = items.map(g=>g.id===editing.id?editing:g); }
+                else { ni = [...items, editing]; }
+                setItems(ni);
+                save({...editData,gallery:ni});
+                setEditing(null);
+            };
+            const deleteItem = (id) => {
+                if (!confirm('Hapus item galeri ini?')) return;
+                const ni = items.filter(g=>g.id!==id);
+                setItems(ni);
+                save({...editData,gallery:ni});
+            };
+            return (
+                <div className="space-y-5">
+                    <div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-800">Kelola Galeri</h2><button onClick={addNew} className="px-4 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-plus mr-1"></i>Tambah Foto</button></div>
+                    {editing && (
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-primary-200 space-y-4">
+                            <h3 className="font-bold text-lg text-primary-700">{items.find(g=>g.id===editing.id)?'Edit':'Tambah'} Galeri</h3>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Judul *</label><input type="text" value={editing.title} onChange={e=>setEditing({...editing,title:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Tanggal</label><input type="date" value={editing.date} onChange={e=>setEditing({...editing,date:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><textarea value={editing.description} onChange={e=>setEditing({...editing,description:e.target.value})} rows={3} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea></div>
+                            <ImageUploader label="Foto" value={editing.image} onChange={v=>setEditing({...editing,image:v})}/>
+                            <div className="flex gap-2">
+                                <button onClick={saveItem} className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-save mr-1"></i>Simpan</button>
+                                <button onClick={()=>setEditing(null)} className="px-5 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-200 transition-all">Batal</button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {items.map(g => (
+                            <div key={g.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 group relative">
+                                <img src={g.image} alt={g.title} className="w-full aspect-video object-cover" onError={e=>e.target.src='https://picsum.photos/seed/galfb/400/300.jpg'}/>
+                                <div className="p-3">
+                                    <h3 className="font-semibold text-sm text-slate-800 truncate">{g.title}</h3>
+                                    <p className="text-xs text-slate-400">{g.date}</p>
+                                </div>
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={()=>setEditing({...g})} className="w-8 h-8 bg-white/90 text-blue-600 rounded-lg flex items-center justify-center shadow-sm"><i className="fas fa-pen text-xs"></i></button>
+                                    <button onClick={()=>deleteItem(g.id)} className="w-8 h-8 bg-white/90 text-red-600 rounded-lg flex items-center justify-center shadow-sm"><i className="fas fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // ---------- Program Manager ----------
+        const ProgramManager = () => {
+            const [progs, setProgs] = useState([...editData.programs]);
+            const [editing, setEditing] = useState(null);
+            const emptyProg = { id:0, title:'', desc:'', icon:'fa-heart-pulse', color:'bg-emerald-500' };
+            const colors = ['bg-emerald-500','bg-orange-500','bg-blue-500','bg-pink-500','bg-purple-500','bg-cyan-500','bg-red-500','bg-yellow-500'];
+            const addNew = () => setEditing({...emptyProg, id:Date.now()});
+            const saveProg = () => {
+                if (!editing.title) { addToast('Nama program wajib diisi','error'); return; }
+                let np;
+                if (progs.find(p=>p.id===editing.id)) { np = progs.map(p=>p.id===editing.id?editing:p); }
+                else { np = [...progs, editing]; }
+                setProgs(np);
+                save({...editData,programs:np});
+                setEditing(null);
+            };
+            const deleteProg = (id) => {
+                if (!confirm('Hapus program ini?')) return;
+                const np = progs.filter(p=>p.id!==id);
+                setProgs(np);
+                save({...editData,programs:np});
+            };
+            return (
+                <div className="space-y-5">
+                    <div className="flex items-center justify-between"><h2 className="text-2xl font-bold text-slate-800">Kelola Program</h2><button onClick={addNew} className="px-4 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-plus mr-1"></i>Tambah Program</button></div>
+                    {editing && (
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-primary-200 space-y-4">
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nama Program *</label><input type="text" value={editing.title} onChange={e=>setEditing({...editing,title:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Deskripsi</label><input type="text" value={editing.desc} onChange={e=>setEditing({...editing,desc:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Icon (fa-xxx)</label><input type="text" value={editing.icon} onChange={e=>setEditing({...editing,icon:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                                <div><label className="block text-sm font-semibold text-slate-700 mb-1">Warna</label>
+                                    <div className="flex gap-2 flex-wrap">{colors.map(c=><button key={c} type="button" onClick={()=>setEditing({...editing,color:c})} className={`w-8 h-8 ${c} rounded-lg ${editing.color===c?'ring-2 ring-offset-2 ring-primary-500':''}`}></button>)}</div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={saveProg} className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl text-sm hover:bg-primary-700 transition-all"><i className="fas fa-save mr-1"></i>Simpan</button>
+                                <button onClick={()=>setEditing(null)} className="px-5 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-200 transition-all">Batal</button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {progs.map(p => (
+                            <div key={p.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center relative group">
+                                <div className={`w-10 h-10 ${p.color} rounded-xl flex items-center justify-center mx-auto mb-2`}><i className={`fas ${p.icon} text-white`}></i></div>
+                                <h3 className="font-bold text-sm">{p.title}</h3>
+                                <p className="text-xs text-slate-500">{p.desc}</p>
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={()=>setEditing({...p})} className="w-7 h-7 bg-white/90 text-blue-600 rounded flex items-center justify-center shadow-sm"><i className="fas fa-pen text-xs"></i></button>
+                                    <button onClick={()=>deleteProg(p.id)} className="w-7 h-7 bg-white/90 text-red-600 rounded flex items-center justify-center shadow-sm"><i className="fas fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // ---------- Complaint Viewer ----------
+        const ComplaintViewer = () => {
+            const [comps, setComps] = useState([...editData.complaints]);
+            const updateStatus = (id, status) => {
+                const nc = comps.map(c=>c.id===id?{...c,status}:c);
+                setComps(nc);
+                save({...editData,complaints:nc});
+            };
+            const deleteComp = (id) => {
+                if (!confirm('Hapus pengaduan ini?')) return;
+                const nc = comps.filter(c=>c.id!==id);
+                setComps(nc);
+                save({...editData,complaints:nc});
+            };
+            return (
+                <div className="space-y-5">
+                    <h2 className="text-2xl font-bold text-slate-800">Pengaduan Pasien ({comps.length})</h2>
+                    {comps.length===0 ? <div className="bg-white rounded-2xl p-10 text-center text-slate-400 shadow-sm border border-slate-100"><i className="fas fa-inbox text-4xl mb-3"></i><p>Belum ada pengaduan</p></div> :
+                    <div className="space-y-4">
+                        {[...comps].reverse().map(c => (
+                            <div key={c.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                                    <div>
+                                        <h3 className="font-bold text-slate-800">{c.name}</h3>
+                                        <p className="text-sm text-slate-500">{c.email} {c.phone && `• ${c.phone}`}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${c.status==='Baru'?'bg-red-100 text-red-700':c.status==='Diproses'?'bg-amber-100 text-amber-700':'bg-emerald-100 text-emerald-700'}`}>{c.status}</span>
+                                        <select value={c.status} onChange={e=>updateStatus(c.id,e.target.value)} className="px-2 py-1 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                            <option value="Baru">Baru</option>
+                                            <option value="Diproses">Diproses</option>
+                                            <option value="Selesai">Selesai</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="bg-primary-50 inline-block px-2 py-0.5 rounded text-xs font-medium text-primary-700 mb-2">{c.type}</div>
+                                <p className="text-sm text-slate-600 leading-relaxed">{c.message}</p>
+                                <div className="flex items-center justify-between mt-3">
+                                    <span className="text-xs text-slate-400"><i className="fas fa-calendar mr-1"></i>{new Date(c.date).toLocaleString('id-ID')}</span>
+                                    <button onClick={()=>deleteComp(c.id)} className="text-xs text-red-500 hover:text-red-700"><i className="fas fa-trash mr-1"></i>Hapus</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>}
+                </div>
+            );
+        };
+
+        // ---------- Survey Viewer ----------
+        const SurveyViewer = () => {
+            const [survs, setSurvs] = useState([...editData.surveys]);
+            const deleteSurv = (id) => {
+                if (!confirm('Hapus survey ini?')) return;
+                const ns = survs.filter(s=>s.id!==id);
+                setSurvs(ns);
+                save({...editData,surveys:ns});
+            };
+            const avg = (field) => survs.length ? (survs.reduce((a,s)=>a+(s[field]||0),0)/survs.length).toFixed(1) : '-';
+            return (
+                <div className="space-y-5">
+                    <h2 className="text-2xl font-bold text-slate-800">Survey Kepuasan ({survs.length})</h2>
+                    {survs.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                            {[{l:'Kebersihan',f:'cleanliness'},{l:'Keramahan',f:'service'},{l:'Dokter',f:'doctor'},{l:'Fasilitas',f:'facility'},{l:'Keseluruhan',f:'overall'}].map((s,i) => (
+                                <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 text-center">
+                                    <div className="text-2xl font-bold text-primary-700">{avg(s.f)}</div>
+                                    <div className="text-xs text-slate-500 mt-1">{s.l}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {survs.length===0 ? <div className="bg-white rounded-2xl p-10 text-center text-slate-400 shadow-sm border border-slate-100"><i className="fas fa-inbox text-4xl mb-3"></i><p>Belum ada survey</p></div> :
+                    <div className="space-y-4">
+                        {[...survs].reverse().map(s => (
+                            <div key={s.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div><h3 className="font-bold text-slate-800">{s.name}</h3><p className="text-xs text-slate-400">Kunjungan: {s.visit} • {new Date(s.date).toLocaleDateString('id-ID')}</p></div>
+                                    <button onClick={()=>deleteSurv(s.id)} className="text-xs text-red-500 hover:text-red-700"><i className="fas fa-trash"></i></button>
+                                </div>
+                                <div className="grid grid-cols-5 gap-2 mb-3">
+                                    {[{l:'Bersih',v:s.cleanliness},{l:'Ramah',v:s.service},{l:'Dokter',v:s.doctor},{l:'Fasilitas',v:s.facility},{l:'Total',v:s.overall}].map((r,i) => (
+                                        <div key={i} className="text-center bg-slate-50 rounded-lg p-2">
+                                            <div className="flex justify-center gap-0.5">{[1,2,3,4,5].map(v=><i key={v} className={`fas fa-star text-[10px] ${v<=r.v?'text-amber-400':'text-slate-300'}`}></i>)}</div>
+                                            <div className="text-[10px] text-slate-500 mt-0.5">{r.l}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {s.suggestion && <p className="text-sm text-slate-600 bg-slate-50 rounded-lg p-3 italic">"{s.suggestion}"</p>}
+                            </div>
+                        ))}
+                    </div>}
+                </div>
+            );
+        };
+
+        // ---------- Contact Editor ----------
+        const ContactEditor = () => {
+            const [c, setC] = useState({...editData.contact});
+            return (
+                <div className="space-y-5">
+                    <h2 className="text-2xl font-bold text-slate-800">Edit Kontak</h2>
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Alamat</label><textarea value={c.address} onChange={e=>setC({...c,address:e.target.value})} rows={2} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"></textarea></div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Telepon</label><input type="text" value={c.phone} onChange={e=>setC({...c,phone:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Email</label><input type="email" value={c.email} onChange={e=>setC({...c,email:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                        </div>
+                        <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Jam Operasional</label><input type="text" value={c.hours} onChange={e=>setC({...c,hours:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                        <div className="grid sm:grid-cols-3 gap-4">
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Facebook</label><input type="text" value={c.facebook} onChange={e=>setC({...c,facebook:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">Instagram</label><input type="text" value={c.instagram} onChange={e=>setC({...c,instagram:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                            <div><label className="block text-sm font-semibold text-slate-700 mb-1.5">YouTube</label><input type="text" value={c.youtube} onChange={e=>setC({...c,youtube:e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"/></div>
+                        </div>
+                        <button onClick={()=>save({...editData,contact:c})} className="px-6 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all"><i className="fas fa-save mr-2"></i>Simpan</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const renderTab = () => {
+            switch(tab) {
+                case 'dashboard': return <Dashboard/>;
+                case 'hero': return <HeroEditor/>;
+                case 'about': return <AboutEditor/>;
+                case 'doctors': return <DoctorManager/>;
+                case 'gallery': return <GalleryManager/>;
+                case 'programs': return <ProgramManager/>;
+                case 'complaints': return <ComplaintViewer/>;
+                case 'surveys': return <SurveyViewer/>;
+                case 'contact': return <ContactEditor/>;
+                default: return <Dashboard/>;
+            }
+        };
+
+        return (
+            <div className="min-h-screen bg-slate-50 pt-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center"><i className="fas fa-shield-halved text-white"></i></div>
+                            <div><h1 className="font-bold text-slate-800">Panel Admin</h1><p className="text-xs text-slate-500">Kelola konten website Promkes RSUD Naibonat</p></div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={()=>setPage('home')} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-xl text-sm hover:bg-slate-50 transition-all"><i className="fas fa-external-link-alt mr-1"></i>Lihat Website</button>
+                            <button onClick={onLogout} className="px-4 py-2 bg-red-50 text-red-600 font-medium rounded-xl text-sm hover:bg-red-100 transition-all"><i className="fas fa-sign-out-alt mr-1"></i>Logout</button>
+                        </div>
+                    </div>
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Sidebar */}
+                        <div className="lg:w-56 flex-shrink-0">
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                                <div className="p-2">
+                                    {tabs.map(t => (
+                                        <button key={t.key} onClick={()=>setTab(t.key)}
+                                            className={`admin-sidebar-item w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-3 ${tab===t.key?'active bg-primary-50 text-primary-700':''}`}>
+                                            <i className={`fas ${t.icon} w-5 text-center`}></i><span className="hidden lg:inline">{t.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            {renderTab()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ============================
+    // MAIN APP
+    // ============================
+    function App() {
+        const [data, setData] = useState(loadData);
+        const [page, setPage] = useState('home');
+        const [isAdmin, setIsAdmin] = useState(() => { try{return sessionStorage.getItem('rsudAdmin')==='true'}catch(e){return false} });
+        const [toasts, setToasts] = useState([]);
+        const toastId = useRef(0);
+
+        const addToast = useCallback((message, type='info') => {
+            const id = ++toastId.current;
+            setToasts(prev => [...prev, {id,message,type}]);
+            setTimeout(()=>setToasts(prev=>prev.filter(t=>t.id!==id)), 4000);
+        }, []);
+
+        const removeToast = (id) => setToasts(prev => prev.filter(t=>t.id!==id));
+
+        const updateData = (newData) => {
+            setData(newData);
+            saveData(newData);
+        };
+
+        const addComplaint = (complaint) => {
+            const newData = {...data, complaints:[...data.complaints, complaint]};
+            updateData(newData);
+        };
+
+        const addSurvey = (survey) => {
+            const newData = {...data, surveys:[...data.surveys, survey]};
+            updateData(newData);
+        };
+
+        const handleLogin = () => {
+            setIsAdmin(true);
+            sessionStorage.setItem('rsudAdmin','true');
+            setPage('admin');
+        };
+
+        const handleLogout = () => {
+            setIsAdmin(false);
+            sessionStorage.removeItem('rsudAdmin');
+            setPage('home');
+            addToast('Berhasil logout','info');
+        };
+
+        const handleSetPage = (p) => {
+            setPage(p);
+            window.scrollTo({top:0, behavior:'smooth'});
+        };
+
+        const renderPage = () => {
+            switch(page) {
+                case 'home': return <HomePage data={data} setPage={handleSetPage}/>;
+                case 'about': return <AboutPage data={data}/>;
+                case 'doctors': return <DoctorsPage data={data}/>;
+                case 'gallery': return <GalleryPage data={data}/>;
+                case 'complaint': return <ComplaintPage addComplaint={addComplaint} addToast={addToast}/>;
+                case 'survey': return <SurveyPage addSurvey={addSurvey} addToast={addToast}/>;
+                case 'contact': return <ContactPage data={data} addToast={addToast}/>;
+                case 'login': return isAdmin ? <AdminPanel data={data} updateData={updateData} onLogout={handleLogout} setPage={handleSetPage} addToast={addToast}/> : <LoginPage onLogin={handleLogin} setPage={handleSetPage} addToast={addToast}/>;
+                case 'admin': return isAdmin ? <AdminPanel data={data} updateData={updateData} onLogout={handleLogout} setPage={handleSetPage} addToast={addToast}/> : <LoginPage onLogin={handleLogin} setPage={handleSetPage} addToast={addToast}/>;
+                default: return <HomePage data={data} setPage={handleSetPage}/>;
+            }
+        };
+
+        return (
+            <React.Fragment>
+                <Navbar page={page} setPage={handleSetPage}/>
+                <main>{renderPage()}</main>
+                {page !== 'login' && page !== 'admin' && <Footer data={data} setPage={handleSetPage}/>}
+                <Toast toasts={toasts} removeToast={removeToast}/>
+            </React.Fragment>
+        );
+    }
+
+    // ============================
+    // RENDER
+    // ============================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+    </script>
+</body>
+</html>
